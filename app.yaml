@@ -1,0 +1,12 @@
+application: voteorskip
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+
+- url: /static/css
+  static_dir: voteorskip/static/css
+  
+- url: .*
+  script: main.py

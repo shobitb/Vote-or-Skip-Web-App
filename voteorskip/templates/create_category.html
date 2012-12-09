@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form method="post" id="create-form" class="form-horizontal">
+        <legend>Create A Category</legend>
+        <div class="control-group">
+            <label class="control-label" for="category">Category Name</label>
+            <div class="controls">
+                <input type="text" id="category" placeholder="e.g. Cuisines">
+            </div>
+        </div>
+
+        <div id = "dynamic-items-list">
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+              <button class="btn" id="add-items-button">Add an item</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+              <button class="btn btn-primary btn-large" id="create-category-button">Create Category</button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        var itemNo = 0;
+        var items = ""
+
+        $("#add-items-button").click(function(event) {
+
+            $("#dynamic-items-list input").each(function(){
+                if (this.value == "") {
+                    alert("Please fill the unfilled item(s)!");                    
+                    event.preventDefault();
+                    exit();
+                }
+            });
+
+            itemNo = itemNo + 1;
+            newItem = '\
+            <div class="control-group">\
+                <label class="control-label" for="item'+itemNo+'"'+'>Item</label>\
+                    <div class="controls">\
+                        <input type="text" id="item'+itemNo+'"'+' /> <a href="#" onclick="delete_item('+itemNo+')"><small>Delete</small></a>\
+                    </div>\
+                </label>\
+            </div>\
+            ';
+            $("#dynamic-items-list").append(newItem);
+            event.preventDefault();
+        })
+
+
+        $("#create-category-button").click(function(event) {
+            items = "";
+            category = $("#category").val()
+
+            if(category == "") {
+                alert("Please fill the category name!");
+                event.preventDefault();
+                exit();
+            }
+
+            $("#dynamic-items-list input").each(function(){
+                if (this.value == "") {
+                    alert("Please fill/remove the unfilled item(s)!");                    
+                    event.preventDefault();
+                    exit();
+                }
+
+                items = items + this.value + ",";
+
+            });
+
+            console.log(items);
+
+            event.preventDefault();
+
+            $.ajax({
+                url: '/save_new_category',
+                type: 'POST',
+                data: {
+                    items: items,
+                    category: category
+                }
+            })
+        })
+
+    </script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<legend>
+	<h1> {{ title }} </h1>
+	<h4> {{ owner }} </h4>
+</legend>
+
+<form action="/categories/{{ title }}/{{ owner }}" method="POST">
+	{% set count = 1 %}
+
+	{% for i in items %}
+		<p>
+			<input type="radio" name="item" value="{{ i }}"> {{ i }} </input>
+			<input type="hidden" name="{{ count }}" value="{{ i }}"></input>
+		</p>
+			{% set count = count + 1 %}
+	{% endfor %}
+	<input type="submit" class="btn btn-primary" name="vote" value="Vote!"></input>
+	<input type="submit" name="skip" class="btn" value="Skip"></input>
+</form>
+
+<br />
+{% if winner and loser %}
+	<p>
+		<br /><blockquote><em>You voted {{ winner }} over {{ loser }}</em></blockquote>
+	</p>
+	<p>
+		<br />
+		<h5> All Votes: </h5>
+		<p> {{ winner }} {{ winner_w }} wins / {{ winner_l }} losses </p>
+		<p> {{ loser }} {{ loser_w }} wins / {{ loser_l }} losses </p>
+	</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>
+	<a href="{{ url_for('create_category') }}">Create</a> | 
+	<a href="#">Edit</a>
+</h3>
+<br>
+{% for c in categories %}
+	<a href="/categories/{{ c.title }}/{{ c.owner.nickname() }}">
+		<h4> {{ c.title }} </h4>
+	</a>
+	- created by {{ c.owner }} <br><br>
+{% endfor %}
+
+{% endblock %}

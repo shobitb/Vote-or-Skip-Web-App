@@ -31,6 +31,34 @@ def save_new_category():
 			item.put()
 	return jsonify(items=items)
 
+@app.route('/save_edited_category',methods=['POST'])
+def save_new_category():
+	category = request.form.get('category')
+	old_category = request.form.get('oldCategory')
+	items = request.form.get('items').split(',')
+	key = category_key(old_category,users.get_current_user().nickname())
+	cat = Category.all().filter('owner =',users.get_current_user()).filter('title =',old_category).get()
+	old_items = Item.all().ancestor(key)
+	db.delete(old_items)
+	cat.title = category
+	cat.put()
+	new_key = key = category_key(category,users.get_current_user().nickname())
+	for i in items:
+		if not i == '':
+			item = Item(parent=new_key,title=i)
+			item.put()
+	return jsonify(items=items)
+
+@app.route('/edit')
+def edit():
+	categories = Category.all().filter('owner = ',users.get_current_user())
+	return render_template('edit.html',categories=categories)
+
+@app.route('/edit/categories/<title>/<owner>',methods=['GET','POST'])
+def edit_category(title,owner):
+	items = Item.all().ancestor(category_key(title,owner))
+	return render_template('edit_category.html',items=items,title=title)
+
 @app.route('/categories/<title>/<owner>',methods=['GET','POST'])
 def show_category(title,owner):
 	category = category_key(title,owner)

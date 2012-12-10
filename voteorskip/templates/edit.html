@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<legend>
+		Edit Your Categories
+	</legend>
+	<br>
+	{% for c in categories %}
+		<a href="edit/categories/{{ c.title }}/{{ c.owner.nickname() }}">
+			<h4> {{ c.title }} </h4>
+		</a>
+	{% endfor %}
+{% endblock %}

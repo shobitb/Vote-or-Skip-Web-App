@@ -2,32 +2,42 @@
 
 {% block content %}
     <form method="post" id="create-form" class="form-horizontal">
-        <legend>Create A Category</legend>
+        <legend>Edit Your Categories</legend>
         <div class="control-group">
-            <label class="control-label" for="category">Category Name</label>
+            <label class="control-label" for="category">Category</label>
             <div class="controls">
-                <input type="text" id="category" placeholder="e.g. Cuisines">
+                <input type="text" id="category" value="{{ title }}">
             </div>
         </div>
 
         <div id = "dynamic-items-list">
+            {% set no = 1 %}
+            {% for i in items %}
+                <div class="control-group">
+                    <label class="control-label" for="item{{ no }}">Item</label>
+                    <div class="controls">
+                      <input type="text" id="item{{ no }}" value = "{{ i.title }}"/><a href="#" onclick="delete_item({{ no }})"><small>Delete</small></a>
+                    </div>
+                </div>
+                {% set no = no + 1 %}
+            {% endfor %}
         </div>
 
         <div class="control-group">
             <div class="controls">
-              <button class="btn" id="add-items-button">Add an item</button>
+              <button class="btn" id="add-items-button">Add another item</button>
             </div>
         </div>
 
         <div class="control-group">
             <div class="controls">
-              <button class="btn btn-primary btn-large" id="create-category-button">Create Category</button>
+              <button class="btn btn-primary btn-large" id="create-category-button">Edit Category</button>
             </div>
         </div>
     </form>
 
     <script>
-        var itemNo = 0;
+        var itemNo = {{ items.count() }};
         var items = ""
 
         $("#add-items-button").click(function(event) {
@@ -41,13 +51,13 @@
             });
 
             itemNo = itemNo + 1;
+
             newItem = '\
             <div class="control-group">\
                 <label class="control-label" for="item'+itemNo+'"'+'>Item</label>\
-                    <div class="controls">\
-                        <input type="text" id="item'+itemNo+'"'+' /> <a href="#" onclick="delete_item('+itemNo+')"><small>Delete</small></a>\
-                    </div>\
-                </label>\
+                <div class="controls">\
+                  <input type="text" id="item'+itemNo+'"'+' /><a href="#" onclick="delete_item('+itemNo+')"><small>Delete</small></a>\
+                </div>\
             </div>\
             ';
             $("#dynamic-items-list").append(newItem);
@@ -79,16 +89,19 @@
             console.log(items);
 
             event.preventDefault();
+            console.log("here");
 
             $.ajax({
-                url: '/save_new_category',
+                url: '/save_edited_category',
                 type: 'POST',
                 data: {
                     items: items,
-                    category: category
+                    category: category,
+                    oldCategory: "{{ title }}"
                 }
             })
         })
+
 
         function delete_item(number) {
             $("#item"+number).parent().parent().remove()

@@ -1,8 +1,7 @@
 application: voteorskip
 version: 1
-runtime: python27
+runtime: python
 api_version: 1
-threadsafe: true
 
 handlers:
 
@@ -13,4 +12,4 @@ handlers:
   static_dir: voteorskip/static/js
   
 - url: .*
-  script: main.app
+  script: main.py

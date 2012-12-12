@@ -6,9 +6,8 @@ from google.appengine.ext import db
 from decorators import login_required
 import random
 import string
-from google.appengine.ext import blobstore
-from google.appengine.ext.webapp import blobstore_handlers
 import urllib,urllib2
+from xml.dom.minidom import parseString
 
 @app.route('/')
 def index():
@@ -123,8 +122,15 @@ def results(title,owner):
 
 @app.route('/upload',methods=['POST'])
 def upload():
-	xml = self.form.get('xml-file').file.read()
-	return render_template('create_category.html', xml=xml)
+	items = []
+	if request.method == 'POST':		
+		xml = request.files.get('xml-file').read()
+		dom = parseString(xml)
+		names = dom.getElementsByTagName("NAME")
+		category = names[0].childNodes[0].data
+		for i in range(1,len(names)):
+			items.append(names[i].childNodes[0].data)
+	return render_template('create_category.html',xml_items=items,xml_category=category)
 
 def category_key(title,owner):
 	return db.Key.from_path('Category', title + owner)

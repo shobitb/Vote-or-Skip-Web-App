@@ -10,11 +10,27 @@
         <div class="control-group">
             <label class="control-label" for="category">Category Name</label>
             <div class="controls">
-                <input type="text" id="category" placeholder="e.g. Cuisines">
+                {% if xml_category %}
+                    <input type="text" id="category" value="{{ xml_category }}" />
+                {% else %}
+                    <input type="text" id="category" placeholder="e.g. Cuisines">
+                {% endif %}
             </div>
         </div>
 
         <div id = "dynamic-items-list">
+            {% if xml_items %}
+                {% set no = 1 %}
+                {% for i in xml_items %}
+                    <div class="control-group">
+                        <label class="control-label" for="item{{ no }}">Item</label>
+                        <div class="controls">
+                          <input type="text" id="item{{ no }}" value = "{{ i }}"/><a href="#" onclick="delete_item({{ no }})"><small>Delete</small></a>
+                        </div>
+                    </div>
+                    {% set no = no + 1 %}
+                {% endfor %}
+            {% endif %}
         </div>
 
         <div class="control-group">
@@ -31,8 +47,7 @@
     </form>
     <hr>
     <h4>... or simply import from an XML file </h4>
-    {{ xml }}
-    <form method="POST" action = "/upload" id="import-xml-form" class="form-horizontal">
+    <form method="post" action = "/upload" id="import-xml-form" class="form-horizontal" enctype="multipart/form-data">
         <div class="control-group">
             <div class="controls">
                 <input type="file" name="xml-file" />
@@ -40,7 +55,7 @@
         </div>
         <div class="control-group">
             <div class="controls">
-                <button class="btn" id="import-xml-button">Import</button>
+                <input type="submit" class="btn" id="import-xml-button" value="<Import />" />
             </div>
         </div>
     </form>

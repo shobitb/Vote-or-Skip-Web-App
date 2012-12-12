@@ -7,6 +7,10 @@
                 Create A Category
             </h1> 
         </legend>
+        <div id="category-created-alert" class="alert alert-success hide">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            Category Created!
+        </div>
         <div class="control-group">
             <label class="control-label" for="category">Category Name</label>
             <div class="controls">
@@ -121,7 +125,9 @@
                     items: items,
                     category: category
                 }
-            })
+            }).success(function(data) {
+                $("#category-created-alert").show()
+            });
         })
 
         function delete_item(number) {

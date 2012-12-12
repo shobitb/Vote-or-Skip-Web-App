@@ -1,13 +1,13 @@
 from voteorskip import app
 from models import Category, Item, UserVote
-from flask import request, render_template, redirect, flash, url_for, jsonify
+from flask import request, Response, render_template, redirect, flash, url_for, jsonify
 from google.appengine.api import users
 from google.appengine.ext import db
 from decorators import login_required
 import random
 import string
 import urllib,urllib2
-from xml.dom.minidom import parseString
+from xml.etree.ElementTree import fromstring, tostring, Element, SubElement, dump
 
 @app.route('/')
 def index():
@@ -31,7 +31,7 @@ def save_new_category():
 		if not i == '':
 			item = Item(parent=key,title=i)
 			item.put()
-	return jsonify(items=items)
+	return Response(status=200)
 
 @app.route('/save_edited_category',methods=['POST'])
 @login_required
@@ -50,7 +50,7 @@ def save_edited_category():
 	old_category.title = new_category_name
 	old_category.put()
 
-	return jsonify(items=items_from_form)
+	return Response(status=200)
 
 @app.route('/edit')
 @login_required
@@ -125,12 +125,23 @@ def upload():
 	items = []
 	if request.method == 'POST':		
 		xml = request.files.get('xml-file').read()
-		dom = parseString(xml)
-		names = dom.getElementsByTagName("NAME")
-		category = names[0].childNodes[0].data
-		for i in range(1,len(names)):
-			items.append(names[i].childNodes[0].data)
+		root = fromstring(xml)
+		xml_category = root.findall('NAME')[0].text
+		for child in root.findall('ITEM'):
+			for item in child.findall('NAME'):
+				items.append(item.text)
 	return render_template('create_category.html',xml_items=items,xml_category=category)
+
+@app.route('/export/<title>/<owner>')
+def export_xml(title,owner):
+	items = Item.all().ancestor(category_key(title,owner))
+	disposition_filename = title + "_" + owner + ".xml"
+	root = Element('CATEGORY')
+	SubElement(root,'NAME').text = title
+	for item in items:
+		i = SubElement(root,'ITEM')
+		SubElement(i,'NAME').text = item.title
+	return Response(tostring(root),status=200,mimetype="application/xml",headers={"Content-Disposition":"attachment;filename="+disposition_filename})
 
 def category_key(title,owner):
 	return db.Key.from_path('Category', title + owner)

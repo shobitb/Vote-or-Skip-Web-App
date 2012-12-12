@@ -26,6 +26,7 @@
 		<br /><blockquote><em>You voted "{{ winner }}" over "{{ loser }}"</em></blockquote>
 	</p>
 {% endif %}
-<a href="/results/{{ title }}/{{ owner }}"><em>See Results</em></a>
+<a href="/results/{{ title }}/{{ owner }}"><small>See Results</small></a> &#183;
+<a href="/export/{{ title }}/{{ owner }}"><small>Export XML</small></a>
 
 {% endblock %}

@@ -2,16 +2,26 @@
 
 {% block content %}
 
-<h3>
-	<a href="{{ url_for('create_category') }}">Create</a> | 
-	<a href="#">Edit</a>
-</h3>
-<br>
-{% for c in categories %}
-	<a href="/categories/{{ c.title }}/{{ c.owner.nickname() }}">
-		<h4> {{ c.title }} </h4>
-	</a>
-	- created by {{ c.owner }} <br><br>
-{% endfor %}
+	<div class="row">
+		<div class="span8">
+			<h3>
+				<a href="{{ url_for('create_category') }}">Create</a> | 
+				<a href="{{ url_for('edit') }}">Edit</a>
+			</h3>
+			<br>
+			{% for c in categories %}
+				<a href="/categories/{{ c.title }}/{{ c.owner.nickname() }}">
+					<h4> {{ c.title }} </h4>
+				</a>
+				- created by {{ c.owner }} <br><br>
+			{% endfor %}
+		</div>
+		<div class="span4">
+			<em>
+				<p> Welcome to Vote or Skip! </p>
+				<p> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eget vestibulum urna. Maecenas risus justo, facilisis non feugiat sit amet, laoreet tristique dolor. Aliquam semper diam est, eu hendrerit elit. Curabitur at est quis dui tempor malesuada. In hac habitasse platea dictumst. Sed id dolor nec velit egestas rhoncus id non eros. Vestibulum vulputate fringilla rhoncus. Aenean ac odio risus. Phasellus in sollicitudin purus. Vivamus tempor ultricies interdum. </p>
+			</em>
+		</div>
+	</div>
 
 {% endblock %}

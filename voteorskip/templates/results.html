@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	<legend>
+		<h1> Results </h1>
+		<h3> {{ title }} </h3>
+		<h4> {{ owner }} </h4>
+	</legend>
+
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="#all-results" data-toggle="tab">All Results</a></li>
+		<li><a href="#my-results" data-toggle="tab">My Votes</a></li>
+	</ul>
+
+	<div class="tab-content">
+		<div class="tab-pane active" id="all-results">
+			<table class="table table-striped">
+				<tr>
+					<th> Item </th>
+					<th> Wins </th>
+					<th> Losses </th>
+				</tr>
+				{% for i in items %}
+					<tr>
+						<td> {{ i.title }} </td>
+						<td> {{ i.wins }} </td>
+						<td> {{ i.losses }} </td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+		<div class="tab-pane" id="my-results">
+			<table class="table table-striped">
+				<tr>
+					<th> Item </th>
+					<th> Wins </th>
+					<th> Losses </th>
+				</tr>
+				{% for m in my_votes %}
+					<tr>
+						<td> {{ my_votes[m][0] }} </td>
+						<td> {{ my_votes[m][1] }} </td>
+						<td> {{ my_votes[m][2] }} </td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+
+{% endblock %}

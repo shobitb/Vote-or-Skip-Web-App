@@ -21,17 +21,11 @@
 	<input type="submit" name="skip" class="btn" value="Skip"></input>
 </form>
 
-<br />
 {% if winner and loser %}
 	<p>
-		<br /><blockquote><em>You voted {{ winner }} over {{ loser }}</em></blockquote>
-	</p>
-	<p>
-		<br />
-		<h5> All Votes: </h5>
-		<p> {{ winner }} {{ winner_w }} wins / {{ winner_l }} losses </p>
-		<p> {{ loser }} {{ loser_w }} wins / {{ loser_l }} losses </p>
+		<br /><blockquote><em>You voted "{{ winner }}" over "{{ loser }}"</em></blockquote>
 	</p>
 {% endif %}
+<a href="/results/{{ title }}/{{ owner }}"><em>See Results</em></a>
 
 {% endblock %}

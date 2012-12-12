@@ -2,7 +2,11 @@
 
 {% block content %}
     <form method="post" id="create-form" class="form-horizontal">
-        <legend>Create A Category</legend>
+        <legend>
+            <h1>
+                Create A Category
+            </h1> 
+        </legend>
         <div class="control-group">
             <label class="control-label" for="category">Category Name</label>
             <div class="controls">
@@ -22,6 +26,21 @@
         <div class="control-group">
             <div class="controls">
               <button class="btn btn-primary btn-large" id="create-category-button">Create Category</button>
+            </div>
+        </div>
+    </form>
+    <hr>
+    <h4>... or simply import from an XML file </h4>
+    {{ xml }}
+    <form method="POST" action = "/upload" id="import-xml-form" class="form-horizontal">
+        <div class="control-group">
+            <div class="controls">
+                <input type="file" name="xml-file" />
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <button class="btn" id="import-xml-button">Import</button>
             </div>
         </div>
     </form>

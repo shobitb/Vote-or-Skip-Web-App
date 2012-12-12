@@ -6,6 +6,8 @@ from google.appengine.ext import db
 from decorators import login_required
 import random
 import string
+from google.appengine.ext import blobstore
+from google.appengine.ext.webapp import blobstore_handlers
 import urllib,urllib2
 
 @app.route('/')
@@ -19,6 +21,7 @@ def create_category():
 	return render_template('create_category.html')
 
 @app.route('/save_new_category',methods=['POST'])
+@login_required
 def save_new_category():
 	category = request.form.get('category')
 	items = request.form.get('items').split(',')
@@ -32,34 +35,40 @@ def save_new_category():
 	return jsonify(items=items)
 
 @app.route('/save_edited_category',methods=['POST'])
-def save_new_category():
-	category = request.form.get('category')
-	old_category = request.form.get('oldCategory')
-	items = request.form.get('items').split(',')
-	key = category_key(old_category,users.get_current_user().nickname())
-	cat = Category.all().filter('owner =',users.get_current_user()).filter('title =',old_category).get()
-	old_items = Item.all().ancestor(key)
-	db.delete(old_items)
-	cat.title = category
-	cat.put()
-	new_key = key = category_key(category,users.get_current_user().nickname())
-	for i in items:
-		if not i == '':
-			item = Item(parent=new_key,title=i)
-			item.put()
-	return jsonify(items=items)
+@login_required
+def save_edited_category():
+	new_category_name = request.form.get('category')
+	old_category_name = request.form.get('oldCategory')
+	items_from_form = request.form.get('items').split(',')
+	old_key = category_key(old_category_name,users.get_current_user().nickname())
+	old_category = Category.all().filter('owner =',users.get_current_user()).filter('title =',old_category_name).get()
+	old_items_from_db = Item.all().ancestor(old_key)
+	
+	for item in old_items_from_db:
+		if item.title not in items_from_form:
+			db.delete(item)
+
+	old_category.title = new_category_name
+	old_category.put()
+
+	return jsonify(items=items_from_form)
 
 @app.route('/edit')
+@login_required
 def edit():
 	categories = Category.all().filter('owner = ',users.get_current_user())
 	return render_template('edit.html',categories=categories)
 
 @app.route('/edit/categories/<title>/<owner>',methods=['GET','POST'])
 def edit_category(title,owner):
+	if owner != users.get_current_user().nickname():
+		error = "You cannot edit a category that you do not own!"
+		return render_template('errors.html',error=error)
 	items = Item.all().ancestor(category_key(title,owner))
 	return render_template('edit_category.html',items=items,title=title)
 
 @app.route('/categories/<title>/<owner>',methods=['GET','POST'])
+@login_required
 def show_category(title,owner):
 	category = category_key(title,owner)
 	random_items = get_random_items(category)
@@ -72,6 +81,9 @@ def show_category(title,owner):
 	
 	winner_item = get_item(category,winner)
 	loser_item = get_item(category,loser)
+
+	winner_item.wins = winner_item.wins + 1
+	loser_item.losses = loser_item.losses + 1
 
 	uservote_winner = get_uservote(winner_item)
 	uservote_loser = get_uservote(loser_item)
@@ -88,30 +100,34 @@ def show_category(title,owner):
 
 	uservote_winner.put()
 	uservote_loser.put()
+	winner_item.put()
+	loser_item.put()
 
-	all_votes_winner = UserVote.all().ancestor(winner_item)
-	all_votes_loser = UserVote.all().ancestor(loser_item)
+	return render_template('category.html', title=title, owner=owner, items=random_items, winner=winner, loser=loser)
 
-	winner_w = 0
-	winner_l = 0
-	loser_w = 0
-	loser_l = 0
+@app.route('/results/<title>/<owner>')
+@login_required
+def results(title,owner):
+	my_votes = {}
+	category = category_key(title,owner)
+	items = Item.all().ancestor(category).order('-wins').order('losses')
+	count = 0
+	for i in items:
+		item = UserVote.all().ancestor(i).order('-wins').order('losses').filter('voter =', users.get_current_user()).get()
+		if not item:
+			my_votes[count] = [i.title, "-", "-"]
+		else:
+			my_votes[count] = [i.title, item.wins, item.losses] # the count helps maintain the order -wins and losses
+		count += 1
+	return render_template('results.html',items=items, title=title, owner=owner, my_votes=my_votes)
 
-	for w in all_votes_winner:
-		winner_w = winner_w + w.wins
-		winner_l = winner_l + w.losses
-
-	for l in all_votes_loser:
-		loser_w = loser_w + l.wins
-		loser_l = loser_l + l.losses
-
-	return render_template(
-		'category.html', title=title, owner=owner, items=random_items, winner=winner, loser=loser,
-		winner_w=winner_w, winner_l=winner_l, loser_w=loser_w, loser_l=loser_l
-	)
+@app.route('/upload',methods=['POST'])
+def upload():
+	xml = self.form.get('xml-file').file.read()
+	return render_template('create_category.html', xml=xml)
 
 def category_key(title,owner):
-	return db.Key.from_path('category', title + owner)
+	return db.Key.from_path('Category', title + owner)
 
 def get_item(category,title):
 	items = Item.all().filter('title =',title).ancestor(category)

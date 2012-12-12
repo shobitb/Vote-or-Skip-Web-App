@@ -2,7 +2,14 @@
 
 {% block content %}
     <form method="post" id="create-form" class="form-horizontal">
-        <legend>Edit Your Categories</legend>
+        <legend>
+            <h1>
+                Edit Your Categories
+            </h1>
+            <h2>
+                {{ title }}
+            </h2>
+        </legend>
         <div class="control-group">
             <label class="control-label" for="category">Category</label>
             <div class="controls">
@@ -99,6 +106,8 @@
                     category: category,
                     oldCategory: "{{ title }}"
                 }
+            }).success(function(data) {
+                console.log(data.items)
             })
         })
 

@@ -1,5 +1,5 @@
 from voteorskip import app
-from models import Category, Item, UserVote
+from models import Category, Item, UserVote, UserComment
 from flask import request, Response, render_template, redirect, flash, url_for, jsonify
 from google.appengine.api import users
 from google.appengine.ext import db
@@ -23,34 +23,44 @@ def create_category():
 @login_required
 def save_new_category():
 	category = request.form.get('category')
-	items = request.form.get('items').split(',')
-	key = category_key(category,users.get_current_user().nickname())
-	cat = Category(key_name=category+users.get_current_user().nickname(), title=category, owner=users.get_current_user())
-	cat.put()
-	for i in items:
-		if not i == '':
-			item = Item(parent=key,title=i)
-			item.put()
-	return Response(status=200)
+	existing = Category.all().filter('title =',category).filter('owner =',users.get_current_user()).get()
+	if existing:
+		return Response(status=400)
+	else:
+		items = request.form.get('items').split(',')
+		cat = Category(title=category, owner=users.get_current_user())
+		cat.put()
+		for i in items:
+			if not i == '':
+				item = Item(parent=cat.key(),title=i)
+				item.put()
+		return Response(status=200)
 
 @app.route('/save_edited_category',methods=['POST'])
 @login_required
 def save_edited_category():
-	new_category_name = request.form.get('category')
-	old_category_name = request.form.get('oldCategory')
+	cat_name = request.form.get('category')
+	existing = Category.all().filter('title =',cat_name).filter('owner =',users.get_current_user()).get()
+	if not existing.key() == request.form.get('key'):
+		error = "You already have a category with that name. Please choose a different name"
+		return Response(status=400)
+	key = request.form.get('key')
+	category = Category.get(key)
 	items_from_form = request.form.get('items').split(',')
-	old_key = category_key(old_category_name,users.get_current_user().nickname())
-	old_category = Category.all().filter('owner =',users.get_current_user()).filter('title =',old_category_name).get()
-	old_items_from_db = Item.all().ancestor(old_key)
-	
+	old_items_from_db = Item.all().ancestor(category)
 	for item in old_items_from_db:
-		if item.title not in items_from_form:
+		if not item.title in items_from_form:
 			db.delete(item)
+		else:
+			items_from_form.remove(item.title)
 
-	old_category.title = new_category_name
-	old_category.put()
-
-	return Response(status=200)
+	for new_item in items_from_form:
+		if not new_item == '':
+			i = Item(parent=category,title=new_item)
+			i.put()
+	category.title = request.form.get('category')
+	category.put()
+	return jsonify(new_items = items_from_form)
 
 @app.route('/edit')
 @login_required
@@ -58,22 +68,23 @@ def edit():
 	categories = Category.all().filter('owner = ',users.get_current_user())
 	return render_template('edit.html',categories=categories)
 
-@app.route('/edit/categories/<title>/<owner>',methods=['GET','POST'])
-def edit_category(title,owner):
-	if owner != users.get_current_user().nickname():
+@app.route('/edit/categories/<key>', methods=['GET','POST'])
+def edit_category(key):
+	category = Category.get(key)
+	if category.owner != users.get_current_user():
 		error = "You cannot edit a category that you do not own!"
 		return render_template('errors.html',error=error)
-	items = Item.all().ancestor(category_key(title,owner))
-	return render_template('edit_category.html',items=items,title=title)
+	items = Item.all().ancestor(category)
+	return render_template('edit_category.html', items=items, count=items.count(), key=key, title=category.title, owner=category.owner.email())
 
-@app.route('/categories/<title>/<owner>',methods=['GET','POST'])
+@app.route('/categories/<key>',methods=['GET','POST'])
 @login_required
-def show_category(title,owner):
-	category = category_key(title,owner)
+def show_category(key):
+	category = Category.get(key)
 	random_items = get_random_items(category)
 
 	if not request.form.has_key('item') or request.form.has_key('skip'):
-		return render_template('category.html',title=title,owner=owner,items=random_items)
+		return render_template('category.html', key=key, title=category.title, owner=category.owner.email(), items=random_items)
 
 	winner = request.form.get('item')
 	loser = request.form.get('2') if winner == request.form.get('1') else request.form.get('1')
@@ -102,13 +113,15 @@ def show_category(title,owner):
 	winner_item.put()
 	loser_item.put()
 
-	return render_template('category.html', title=title, owner=owner, items=random_items, winner=winner, loser=loser)
+	return render_template('category.html', key=key, title=category.title, owner=category.owner.email(), items=random_items, winner=winner, loser=loser)
 
-@app.route('/results/<title>/<owner>')
+@app.route('/results/<key>')
 @login_required
-def results(title,owner):
+def results(key):
 	my_votes = {}
-	category = category_key(title,owner)
+	my_comments = {}
+	user_comments = {}
+	category = Category.get(key)
 	items = Item.all().ancestor(category).order('-wins').order('losses')
 	count = 0
 	for i in items:
@@ -118,9 +131,15 @@ def results(title,owner):
 		else:
 			my_votes[count] = [i.title, item.wins, item.losses] # the count helps maintain the order -wins and losses
 		count += 1
-	return render_template('results.html',items=items, title=title, owner=owner, my_votes=my_votes)
 
-@app.route('/upload',methods=['POST'])
+	for c in items:
+		user_comments[c.title] = UserComment.all().ancestor(c)
+		my_comment = UserComment.all().ancestor(c).filter('commenter =',users.get_current_user()).get()
+		if my_comment:
+			my_comments[c.title] = my_comment.comment
+	return render_template('results.html',items=items, key=key, title=category.title, owner=category.owner.email(), my_votes=my_votes, my_comments=my_comments,user_comments=user_comments)
+
+@app.route('/upload', methods=['POST'])
 def upload():
 	items = []
 	if request.method == 'POST':		
@@ -130,21 +149,42 @@ def upload():
 		for child in root.findall('ITEM'):
 			for item in child.findall('NAME'):
 				items.append(item.text)
-	return render_template('create_category.html',xml_items=items,xml_category=category)
+	if request.form.has_key('edit'):
+		return render_template('edit_category.html',xml_items=items,title=xml_category,count=len(items),key=request.form.get('key'))
+	return render_template('create_category.html',xml_items=items,xml_category=xml_category)
 
-@app.route('/export/<title>/<owner>')
-def export_xml(title,owner):
-	items = Item.all().ancestor(category_key(title,owner))
-	disposition_filename = title + "_" + owner + ".xml"
+@app.route('/export/<key>')
+def export_xml(key):
+	category = Category.get(key)
+	items = Item.all().ancestor(category)
+	disposition_filename = category.title + "_" + category.owner.email() + ".xml"
 	root = Element('CATEGORY')
-	SubElement(root,'NAME').text = title
+	SubElement(root,'NAME').text = category.title
 	for item in items:
 		i = SubElement(root,'ITEM')
 		SubElement(i,'NAME').text = item.title
 	return Response(tostring(root),status=200,mimetype="application/xml",headers={"Content-Disposition":"attachment;filename="+disposition_filename})
 
-def category_key(title,owner):
-	return db.Key.from_path('Category', title + owner)
+@app.route('/comment/<key>')
+def options_to_comment(key):
+	category = Category.get(key)
+	items = Item.all().ancestor(category)
+	return render_template('comment.html',items=items,key=key,title=category.title,owner=category.owner.email())	
+
+@app.route('/postcomment',methods=['POST'])
+def post_comment():
+	key = request.form.get('key')
+	item_name = request.form.get('item')
+	user_comment = request.form.get('comment')
+	category = Category.get(key)
+	item = Item.all().ancestor(category).filter('title =',item_name).get()
+	comment = UserComment.all().ancestor(item.key()).filter('commenter =',users.get_current_user()).get()
+	if comment:
+		return Response(status=400)
+	else:
+		comment = UserComment(parent=item.key(),comment=user_comment,commenter=users.get_current_user())
+		comment.put()
+		return Response(status=200)
 
 def get_item(category,title):
 	items = Item.all().filter('title =',title).ancestor(category)

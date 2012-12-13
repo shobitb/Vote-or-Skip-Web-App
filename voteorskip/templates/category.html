@@ -7,7 +7,7 @@
 	<h4> {{ owner }} </h4>
 </legend>
 
-<form action="/categories/{{ title }}/{{ owner }}" method="POST">
+<form action="/categories/{{ key }}" method="POST">
 	{% set count = 1 %}
 
 	{% for i in items %}
@@ -26,7 +26,8 @@
 		<br /><blockquote><em>You voted "{{ winner }}" over "{{ loser }}"</em></blockquote>
 	</p>
 {% endif %}
-<a href="/results/{{ title }}/{{ owner }}"><small>See Results</small></a> &#183;
-<a href="/export/{{ title }}/{{ owner }}"><small>Export XML</small></a>
+<a href="/results/{{ key }}"><small>See Results</small></a> &#183;
+<a href="/export/{{ key }}"><small>Export XML</small></a> &#183;
+<a href="/comment/{{ key }}"><small>Comment</small></a>
 
 {% endblock %}

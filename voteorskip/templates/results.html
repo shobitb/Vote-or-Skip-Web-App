@@ -10,7 +10,9 @@
 
 	<ul class="nav nav-tabs">
 		<li class="active"><a href="#all-results" data-toggle="tab">All Results</a></li>
+		<li><a href="#all-comments" data-toggle="tab">All Comments</a></li>		
 		<li><a href="#my-results" data-toggle="tab">My Votes</a></li>
+		<li><a href="#my-comments" data-toggle="tab">My Comments</a></li>
 	</ul>
 
 	<div class="tab-content">
@@ -30,6 +32,19 @@
 				{% endfor %}
 			</table>
 		</div>
+		<div class="tab-pane" id="all-comments">
+			{% for uc in user_comments %}
+			<legend>
+				{{ uc }}
+			</legend>
+				{% for u in user_comments[uc] %}
+					<blockquote>
+						{{ u.comment }}
+						<small> {{ u.commenter }} </small>
+					</blockquote>
+				{% endfor %}
+			{% endfor %}
+		</div>
 		<div class="tab-pane" id="my-results">
 			<table class="table table-striped">
 				<tr>
@@ -45,6 +60,17 @@
 					</tr>
 				{% endfor %}
 			</table>
+		</div>
+		<div class="tab-pane" id="my-comments">
+			{% for c in my_comments %}
+				<legend>
+					{{ c }}
+				</legend>
+				<blockquote>
+					{{ my_comments[c] }}
+					<small> me </small>
+				</blockquote>
+			{% endfor %}
 		</div>
 	</div>
 

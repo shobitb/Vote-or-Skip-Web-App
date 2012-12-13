@@ -16,3 +16,7 @@ class UserVote(db.Model):
 	losses = db.IntegerProperty(default=0)
 	voter = db.UserProperty(required = True)
 
+class UserComment(db.Model):
+	comment = db.StringProperty()
+	commenter = db.UserProperty(required = True)
+

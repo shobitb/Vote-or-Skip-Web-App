@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<legend>
+        <h1>
+            Comment
+        </h1>
+        <h3>
+        	{{ title }}
+        </h3>
+        <h4>
+        	{{ owner }}
+        </h4>
+    </legend>
+    <div id="comment-post-success" class="alert alert-success hide">
+    	Your comment was posted! Thank you.
+    </div>
+    <div id="comment-post-failed" class="alert alert-error hide">
+    	You have already commented on that item.
+    </div>
+    <form method="post" action="/postcomment/{{ key }}" id="comment-chooser" class="form-horizontal">
+    	<div class="control-group">
+    		<label class="control-label" for="items">Choose an item to comment on:</label>
+    		<div class="controls">
+    			<select class="dropdown" id="items" data-toggle="dropdown">
+			    	{% for i in items %}
+						<option name="item" value="{{ i.title }}">{{ i.title }}</option>
+			    	{% endfor %}
+		    	</select>
+    		</div>
+    	</div>
+    	<div class="control-group">
+    		<label class="control-label" for="comment">Write here: </label>
+    		<div class="controls">
+    			<textarea id="comment"></textarea>
+    		</div>
+    	</div>
+    	<div class="control-group">
+    		<div class="controls">
+    			<button id="post-comment-button" class="btn btn-primary">Post Comment</button>
+    		</div>
+    	</div>
+	</form>
+
+	<script>
+		$("#post-comment-button").click(function(event) {
+			item = $("select option:selected").text()
+			console.log(item)
+			comment = $("#comment").val()
+			console.log(comment)
+			event.preventDefault();
+			$.ajax({
+				url: '/postcomment',
+				type: 'POST',
+				data: { item: item, comment: comment, key: "{{ key }}" }
+			}).success(function(data) {
+				$("#comment-post-failed").hide();
+				$("#comment-post-success").show();
+			}).error(function(data) {
+				$("#comment-post-failed").show();
+				$("#comment-post-success").hide();
+			})
+		})
+
+	</script>
+
+{% endblock %}

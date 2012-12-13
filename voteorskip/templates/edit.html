@@ -8,7 +8,7 @@
 	</legend>
 	<br>
 	{% for c in categories %}
-		<a href="edit/categories/{{ c.title }}/{{ c.owner.nickname() }}">
+		<a href="edit/categories/{{ c.key() }}">
 			<h4> {{ c.title }} </h4>
 		</a>
 	{% endfor %}

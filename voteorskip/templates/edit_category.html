@@ -1,50 +1,98 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <form method="post" id="create-form" class="form-horizontal">
-        <legend>
-            <h1>
-                Edit Your Categories
-            </h1>
-            <h2>
-                {{ title }}
-            </h2>
-        </legend>
-        <div class="control-group">
-            <label class="control-label" for="category">Category</label>
-            <div class="controls">
-                <input type="text" id="category" value="{{ title }}">
-            </div>
-        </div>
-
-        <div id = "dynamic-items-list">
-            {% set no = 1 %}
-            {% for i in items %}
+    
+    <legend>
+        <h1>
+            Edit Your Categories
+        </h1>
+        <h2>
+            {{ title }}
+        </h2>
+    </legend>
+    <div id="category-edited-alert" class="alert alert-success hide">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        Edit saved!
+    </div>
+    <div id="category-not-edited-alert" class="alert alert-error hide">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        You already have another category named {{ title }}. Please choose a different name
+    </div>
+    <div class="row">
+        <div class="span8">
+            <form method="post" id="create-form" class="form-horizontal">
                 <div class="control-group">
-                    <label class="control-label" for="item{{ no }}">Item</label>
+                    <label class="control-label" for="category">Category</label>
                     <div class="controls">
-                      <input type="text" id="item{{ no }}" value = "{{ i.title }}"/><a href="#" onclick="delete_item({{ no }})"><small>Delete</small></a>
+                        <input type="text" id="category" value="{{ title }}">
                     </div>
                 </div>
-                {% set no = no + 1 %}
-            {% endfor %}
-        </div>
 
-        <div class="control-group">
-            <div class="controls">
-              <button class="btn" id="add-items-button">Add another item</button>
-            </div>
-        </div>
+                <div id = "dynamic-items-list">
+                    {% set no = 1 %}
+                    {% if xml_items %}
+                        {% for i in xml_items %}
+                            <div class="control-group">
+                                <label class="control-label" for="item{{ no }}">Item</label>
+                                <div class="controls">
+                                  <input type="text" id="item{{ no }}" value = "{{ i }}"/><a href="#" onclick="delete_item({{ no }})"><small>Delete</small></a>
+                                </div>
+                            </div>
+                            {% set no = no + 1 %}
+                        {% endfor %}
+                    {% else %}
+                        {% for i in items %}
+                            <div class="control-group">
+                                <label class="control-label" for="item{{ no }}">Item</label>
+                                <div class="controls">
+                                  <input type="text" id="item{{ no }}" value = "{{ i.title }}"/><a href="#" onclick="delete_item({{ no }})"><small>Delete</small></a>
+                                </div>
+                            </div>
+                            {% set no = no + 1 %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
 
-        <div class="control-group">
-            <div class="controls">
-              <button class="btn btn-primary btn-large" id="create-category-button">Edit Category</button>
-            </div>
+                <div class="control-group">
+                    <div class="controls">
+                      <button class="btn" id="add-items-button">Add another item</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="controls">
+                      <button class="btn btn-primary btn-large" id="create-category-button">Edit Category</button>
+                    </div>
+                </div>
+            </form>
+            <h4>... or simply import from an XML file </h4>
+            <form method="post" action = "/upload" id="import-xml-form-edit" class="form-horizontal" enctype="multipart/form-data">
+                <div class="control-group">
+                    <div class="controls">
+                        <input type="file" name="xml-file" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <input type="submit" class="btn" id="import-xml-button" value="<Import />" />
+                    </div>
+                </div>
+                <input type="hidden" name="edit" />
+                <input type="hidden" name="key" value="{{ key }}" />
+            </form>
         </div>
-    </form>
+        <div class="span4">
+            <h4> Expiration Date </h4>
+            {% if expiration_date %}
+                {{ expiration_date }}
+            {% else %}
+                An expiration date has not been set for this category.
+            {% endif %}
+        </div>
+    </div>
 
     <script>
-        var itemNo = {{ items.count() }};
+        var itemNo = {{ count }};
         var items = ""
 
         $("#add-items-button").click(function(event) {
@@ -93,10 +141,7 @@
 
             });
 
-            console.log(items);
-
             event.preventDefault();
-            console.log("here");
 
             $.ajax({
                 url: '/save_edited_category',
@@ -104,11 +149,17 @@
                 data: {
                     items: items,
                     category: category,
-                    oldCategory: "{{ title }}"
+                    key: "{{ key }}"
                 }
             }).success(function(data) {
-                console.log(data.items)
-            })
+                console.log(items)
+                console.log(data.new_items)
+                $("#category-not-edited-alert").hide()
+                $("#category-edited-alert").show()
+            }).error(function(data) {
+                $("#category-edited-alert").hide()
+                $("#category-not-edited-alert").show()
+            });
         })
 
 

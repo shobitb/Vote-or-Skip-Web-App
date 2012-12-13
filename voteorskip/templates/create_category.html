@@ -1,16 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <legend>
+        <h1>
+            Create A Category
+        </h1> 
+    </legend>
+    <div id="category-created-alert" class="alert alert-success hide">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        Category created!
+    </div>
+    <div id="category-not-created-alert" class="alert alert-error hide">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        You already have another category with that name. Please choose a different name
+    </div>
+        
     <form method="post" id="create-form" class="form-horizontal">
-        <legend>
-            <h1>
-                Create A Category
-            </h1> 
-        </legend>
-        <div id="category-created-alert" class="alert alert-success hide">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            Category Created!
-        </div>
         <div class="control-group">
             <label class="control-label" for="category">Category Name</label>
             <div class="controls">
@@ -51,7 +56,7 @@
     </form>
     <hr>
     <h4>... or simply import from an XML file </h4>
-    <form method="post" action = "/upload" id="import-xml-form" class="form-horizontal" enctype="multipart/form-data">
+    <form method="post" action = "/upload" name="import-xml-form-create" class="form-horizontal" enctype="multipart/form-data">
         <div class="control-group">
             <div class="controls">
                 <input type="file" name="xml-file" />
@@ -126,7 +131,11 @@
                     category: category
                 }
             }).success(function(data) {
+                $("#category-not-created-alert").hide()
                 $("#category-created-alert").show()
+            }).error(function(data) {
+                $("#category-created-alert").hide()
+                $("#category-not-created-alert").show()
             });
         })
 

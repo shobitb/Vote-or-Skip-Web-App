@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	<legend>
+        <h1>
+            Search Results
+        </h1> 
+        <p class="lead">Your search for <strong>{{ keywords }}</strong> returned the following results</p>
+    </legend>
+	{% for category in categories %}
+		<div><strong><a href="/categories/{{ keys[category] }}">{{ category }}</a></strong></div>
+		{% for item in categories[category] %}
+			<span class="muted"> {{ item.title }} &#183; </span>
+		{% endfor %}
+		<hr>
+	{% endfor %}
+
+{% endblock %}

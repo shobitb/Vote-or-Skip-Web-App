@@ -3,13 +3,15 @@ from models import Category, Item, UserVote, UserComment
 from flask import request, Response, render_template, redirect, flash, url_for, jsonify
 from google.appengine.api import users
 from google.appengine.ext import db
+from datetime import datetime
 from decorators import login_required
 import random
 import string
 import urllib,urllib2
-from xml.etree.ElementTree import fromstring, tostring, Element, SubElement, dump
+from xml.etree.ElementTree import fromstring, tostring, Element, SubElement
 
 @app.route('/')
+@login_required
 def index():
 	categories = Category.all()
 	return render_template('index.html',categories=categories)
@@ -64,24 +66,40 @@ def save_edited_category():
 
 @app.route('/edit')
 @login_required
+@login_required
 def edit():
 	categories = Category.all().filter('owner = ',users.get_current_user())
 	return render_template('edit.html',categories=categories)
 
 @app.route('/edit/categories/<key>', methods=['GET','POST'])
+@login_required
 def edit_category(key):
 	category = Category.get(key)
+	expiration = ""
+	if category.expiration:
+		expiration = category.expiration.strftime("%m/%d/%Y")
 	if category.owner != users.get_current_user():
 		error = "You cannot edit a category that you do not own!"
 		return render_template('errors.html',error=error)
 	items = Item.all().ancestor(category)
-	return render_template('edit_category.html', items=items, count=items.count(), key=key, title=category.title, owner=category.owner.email())
+	return render_template('edit_category.html', items=items, count=items.count(), key=key, title=category.title, owner=category.owner.email(), expiration=expiration)
+
+@app.route('/set_expiration_date/<key>',methods=['POST'])
+def set_expiration(key):
+	category = Category.get(key)
+	date = request.form.get('date')
+	category.expiration = datetime.strptime(date, "%m/%d/%Y")
+	category.put()
+	return jsonify(date = category.expiration.strftime("%m/%d/%Y"))
 
 @app.route('/categories/<key>',methods=['GET','POST'])
 @login_required
 def show_category(key):
 	category = Category.get(key)
 	random_items = get_random_items(category)
+
+	if category.expiration and datetime.now() > category.expiration:
+		return results(key)
 
 	if not request.form.has_key('item') or request.form.has_key('skip'):
 		return render_template('category.html', key=key, title=category.title, owner=category.owner.email(), items=random_items)
@@ -121,7 +139,10 @@ def results(key):
 	my_votes = {}
 	my_comments = {}
 	user_comments = {}
+	expired = ""
 	category = Category.get(key)
+	if category.expiration and datetime.now() > category.expiration:
+		expired = "This category has expired. Voting is no longer possible."
 	items = Item.all().ancestor(category).order('-wins').order('losses')
 	count = 0
 	for i in items:
@@ -137,9 +158,10 @@ def results(key):
 		my_comment = UserComment.all().ancestor(c).filter('commenter =',users.get_current_user()).get()
 		if my_comment:
 			my_comments[c.title] = my_comment.comment
-	return render_template('results.html',items=items, key=key, title=category.title, owner=category.owner.email(), my_votes=my_votes, my_comments=my_comments,user_comments=user_comments)
+	return render_template('results.html',items=items, key=key, title=category.title, owner=category.owner.email(), my_votes=my_votes, my_comments=my_comments, user_comments=user_comments,expired=expired)
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
 	items = []
 	if request.method == 'POST':		
@@ -166,12 +188,14 @@ def export_xml(key):
 	return Response(tostring(root),status=200,mimetype="application/xml",headers={"Content-Disposition":"attachment;filename="+disposition_filename})
 
 @app.route('/comment/<key>')
+@login_required
 def options_to_comment(key):
 	category = Category.get(key)
 	items = Item.all().ancestor(category)
 	return render_template('comment.html',items=items,key=key,title=category.title,owner=category.owner.email())	
 
 @app.route('/postcomment',methods=['POST'])
+@login_required
 def post_comment():
 	key = request.form.get('key')
 	item_name = request.form.get('item')
@@ -185,6 +209,24 @@ def post_comment():
 		comment = UserComment(parent=item.key(),comment=user_comment,commenter=users.get_current_user())
 		comment.put()
 		return Response(status=200)
+
+@app.route('/battles/search/<keywordslist>')
+def search(keywordslist):
+	keywords = keywordslist.split(" ")
+	categories = {}
+	keys = {}
+	cat_count = {}
+	for key in keywords:
+		for category in Category.all():
+			if category.title.lower().__contains__(key.lower()):
+				categories[category.title] = Item.all().ancestor(category)
+				keys[category.title] = category.key()
+	for key in keywords:
+		for item in Item.all():
+			if item.title.lower().__contains__(key.lower()):
+				categories[item.parent().title] = Item.all().ancestor(item.parent())
+				keys[item.parent().title] = item.parent().key()
+	return render_template('search_results.html',categories=categories, keys=keys, keywords=keywordslist)
 
 def get_item(category,title):
 	items = Item.all().filter('title =',title).ancestor(category)

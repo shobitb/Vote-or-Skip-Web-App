@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
-{% block content %}
-    
+{% block content %} 
     <legend>
         <h1>
             Edit Your Categories
@@ -83,17 +82,32 @@
         </div>
         <div class="span4">
             <h4> Expiration Date </h4>
-            {% if expiration_date %}
-                {{ expiration_date }}
-            {% else %}
-                An expiration date has not been set for this category.
-            {% endif %}
+            <div id="expiration">
+                <div id="expiration-date">
+                    {% if expiration %}
+                        <p><strong> {{ expiration }} </strong></p>
+                        Change:
+                    {% endif %}
+                </div>
+                <form action="">
+                    <div class="controls-group">
+                        <div class="controls">
+                            <input type="text" id="datepicker" />
+                        </div>
+                    </div>
+                    <div class="controls-group">
+                        <div class="controls">
+                            <button class="btn" id="datepicker-button">Set Date</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
         var itemNo = {{ count }};
-        var items = ""
+        var items = "";
 
         $("#add-items-button").click(function(event) {
 
@@ -111,7 +125,7 @@
             <div class="control-group">\
                 <label class="control-label" for="item'+itemNo+'"'+'>Item</label>\
                 <div class="controls">\
-                  <input type="text" id="item'+itemNo+'"'+' /><a href="#" onclick="delete_item('+itemNo+')"><small>Delete</small></a>\
+                  <input type="text" id="item'+itemNo+'"'+' /><a href="#" onclick="delete_item('+itemNo+')"><small> Delete</small></a>\
                 </div>\
             </div>\
             ';
@@ -162,10 +176,26 @@
             });
         })
 
+            $("#datepicker-button").click(function(event) {
+                date = $("#datepicker").val()
+                console.log(date)
+                $.ajax({
+                    url: "/set_expiration_date/{{ key }}",
+                    data: { date: date },
+                    type: 'POST'
+                }).success(function(data) {
+                    $("#expiration-date").html("<p><strong>" + data.date + "</strong></p>")
+                })
+                event.preventDefault();
+            })
 
-        function delete_item(number) {
-            $("#item"+number).parent().parent().remove()
-        }
+            $(function() {
+                $( "#datepicker" ).datepicker();
+            });
+
+            function delete_item(number) {
+                $("#item"+number).parent().parent().remove()
+            }
 
     </script>
 {% endblock %}

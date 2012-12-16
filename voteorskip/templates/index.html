@@ -5,23 +5,36 @@
 	<div class="row">
 		<div class="span8">
 			<h3>
-				<a href="{{ url_for('create_category') }}" class="lead">Create</a> &#149;  
-				<a href="{{ url_for('edit') }}" class="lead">Edit</a>
+				<a href="{{ url_for('create_category') }}" class="lead">Create</a> &#183; 
+				<a href="{{ url_for('edit') }}" class="lead">Edit</a>  &#183;
+				{% if link == "Login" %}
+				<a href="{{ loginout }}" class="lead">Login</a>
+				{% else %}
+				<a href="{{ loginout }}" class="lead">Logout</a>
+				{% endif %}
 			</h3>
 			<br>
 			{% for c in categories %}
 				<a href="/categories/{{ c.key() }}">
 					<h4> {{ c.title }} </h4>
 				</a>
-				- created by {{ c.owner }} <br><br>
+				<div class="muted"> - created by {{ c.owner }} </div>
+				<br>
 			{% endfor %}
 		</div>
 		<div class="span4">
-			<em>
-				<p> Welcome to Vote or Skip! </p>
-				<hr>
-				<p> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eget vestibulum urna. Maecenas risus justo, facilisis non feugiat sit amet, laoreet tristique dolor. Aliquam semper diam est, eu hendrerit elit. Curabitur at est quis dui tempor malesuada. In hac habitasse platea dictumst. Sed id dolor nec velit egestas rhoncus id non eros. Vestibulum vulputate fringilla rhoncus. Aenean ac odio risus. Phasellus in sollicitudin purus. Vivamus tempor ultricies interdum. </p>
-			</em>
+			<p class="lead"> Welcome to Vote or Skip! </p>
+			<hr>
+			<p class="lead"> What is Vote or Skip? </p>
+			<p>
+				Vote or Skip is a ranking system based on the <a href="http://en.wikipedia.org/wiki/Condorcet_method">Condorcet method</a>. The idea is to compare objects one pair at a time until a ranking between all objects is obtained.
+			</p>
+			<p class="lead">
+				How to vote:
+			</p>
+			<p>
+				Choose between the categories shown on the left and begin voting. If you cannot decide between two items, choose skip. You can also comment on the items in the categories -- only once, though! You can also create your own categories and add images to your items. Start voting!
+			</p>
 		</div>
 	</div>
 

@@ -68,7 +68,7 @@
             <form method="post" action = "/upload" id="import-xml-form-edit" class="form-horizontal" enctype="multipart/form-data">
                 <div class="control-group">
                     <div class="controls">
-                        <input type="file" name="xml-file" />
+                        <input type="file" id="xml-here" name="xml-file" />
                     </div>
                 </div>
                 <div class="control-group">
@@ -203,6 +203,19 @@
             function delete_item(number) {
                 $("#item"+number).parent().parent().remove()
             }
+
+            $("#import-xml-form-edit").submit(function() {
+            if ($("#xml-here").val() == "") {
+                alert("Please upload an XML file");
+                return false;
+            } else {
+                file = $("#xml-here").val().split('.')
+                if (file[file.length-1] != "xml") {
+                    alert("Please upload an XML file")
+                    return false;
+                }
+            }
+        })
 
     </script>
 {% endblock %}

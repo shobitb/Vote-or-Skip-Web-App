@@ -12,10 +12,15 @@ from werkzeug import parse_options_header
 from xml.etree.ElementTree import fromstring, tostring, Element, SubElement
 
 @app.route('/')
-@login_required
 def index():
+	if not users.get_current_user():
+		loginout = users.create_login_url('/')
+		link = "Login"
+	else:
+		loginout = users.create_logout_url('/')
+		link = "Logout"
 	categories = Category.all()
-	return render_template('index.html',categories=categories)
+	return render_template('index.html',categories=categories,loginout=loginout,link=link)
 
 @app.route('/create_category', methods=['GET','POST'])
 @login_required
@@ -217,7 +222,7 @@ def edit_image(key):
 	category = Category.get(key)
 	upload_url = blobstore.create_upload_url('/saveimage/'+key)
 	items = Item.all().ancestor(category)
-	return render_template('edit_images.html',items=items,key=key,title=category.title,owner=category.owner.email(), upload_url=upload_url)
+	return render_template('edit_images.html',items=items,key=key,title=category.title,owner=category.owner.email(),upload_url=upload_url)
 
 @app.route('/saveimage/<key>',methods=['POST'])
 def saveimage(key):
@@ -250,6 +255,10 @@ def search(keywordslist):
 				categories[item.parent().title] = Item.all().ancestor(item.parent())
 				keys[item.parent().title] = item.parent().key()
 	return render_template('search_results.html',categories=categories, keys=keys, keywords=keywordslist)
+
+@app.route('/logout')
+def logout():
+	return redirect(users.create_logout_url('/'))
 
 def get_item(category,title):
 	items = Item.all().filter('title =',title).ancestor(category)

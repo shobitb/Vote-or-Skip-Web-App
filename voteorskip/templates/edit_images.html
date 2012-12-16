@@ -41,6 +41,20 @@
     	</div>
 	</form>
 
+	<hr>
+	<h4> Existing images </h4>
+	{% for i in items %}
+		<div class="row">
+			{% if i.image_url != 'None' %}
+				<div class="span1">
+					<img src="{{ i.image_url }}" />
+				</div>
+				<div class="span8"> {{ i.title }} </div>
+			{% endif %}
+		</div>
+		<br />
+	{% endfor %}
+
 	<script>
 	</script>
 

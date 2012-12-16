@@ -231,7 +231,7 @@ def saveimage(key):
 		item.blob_key = blob_key
 		item.image_url = images.get_serving_url(blob_key)
 		item.put()
-	return edit_image(key)
+	return redirect('edit/images/'+key)
 
 @app.route('/battles/search/<keywordslist>')
 def search(keywordslist):

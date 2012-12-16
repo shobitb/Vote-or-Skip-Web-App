@@ -1,13 +1,14 @@
 from voteorskip import app
 from models import Category, Item, UserVote, UserComment
 from flask import request, Response, render_template, redirect, flash, url_for, jsonify
-from google.appengine.api import users
-from google.appengine.ext import db
+from google.appengine.api import users, files, images
+from google.appengine.ext import db, blobstore
 from datetime import datetime
 from decorators import login_required
 import random
 import string
 import urllib,urllib2
+from werkzeug import parse_options_header
 from xml.etree.ElementTree import fromstring, tostring, Element, SubElement
 
 @app.route('/')
@@ -42,11 +43,11 @@ def save_new_category():
 @login_required
 def save_edited_category():
 	cat_name = request.form.get('category')
-	existing = Category.all().filter('title =',cat_name).filter('owner =',users.get_current_user()).get()
-	if not existing.key() == request.form.get('key'):
+	key = request.form.get('key')
+	existing = Category.all().filter('title =', cat_name).filter('owner =',users.get_current_user()).get()
+	if not str(existing.key()) == key:
 		error = "You already have a category with that name. Please choose a different name"
 		return Response(status=400)
-	key = request.form.get('key')
 	category = Category.get(key)
 	items_from_form = request.form.get('items').split(',')
 	old_items_from_db = Item.all().ancestor(category)
@@ -96,12 +97,12 @@ def set_expiration(key):
 @login_required
 def show_category(key):
 	category = Category.get(key)
-	random_items = get_random_items(category)
 
 	if category.expiration and datetime.now() > category.expiration:
 		return results(key)
 
 	if not request.form.has_key('item') or request.form.has_key('skip'):
+		random_items = get_random_items(category)
 		return render_template('category.html', key=key, title=category.title, owner=category.owner.email(), items=random_items)
 
 	winner = request.form.get('item')
@@ -131,6 +132,7 @@ def show_category(key):
 	winner_item.put()
 	loser_item.put()
 
+	random_items = get_random_items(category)
 	return render_template('category.html', key=key, title=category.title, owner=category.owner.email(), items=random_items, winner=winner, loser=loser)
 
 @app.route('/results/<key>')
@@ -164,7 +166,7 @@ def results(key):
 @login_required
 def upload():
 	items = []
-	if request.method == 'POST':		
+	if request.method == 'POST':
 		xml = request.files.get('xml-file').read()
 		root = fromstring(xml)
 		xml_category = root.findall('NAME')[0].text
@@ -210,6 +212,27 @@ def post_comment():
 		comment.put()
 		return Response(status=200)
 
+@app.route('/edit/images/<key>')
+def edit_image(key):
+	category = Category.get(key)
+	upload_url = blobstore.create_upload_url('/saveimage/'+key)
+	items = Item.all().ancestor(category)
+	return render_template('edit_images.html',items=items,key=key,title=category.title,owner=category.owner.email(), upload_url=upload_url)
+
+@app.route('/saveimage/<key>',methods=['POST'])
+def saveimage(key):
+	category = Category.get(key)
+	items = Item.all().ancestor(category)
+	item = Item.all().ancestor(category).filter('title =',request.form.get('items')).get()
+	if request.method == 'POST':
+		image_file = request.files['image']
+		headers = image_file.headers['Content-Type']
+		blob_key = parse_options_header(headers)[1]['blob-key']
+		item.blob_key = blob_key
+		item.image_url = images.get_serving_url(blob_key)
+		item.put()
+	return edit_image(key)
+
 @app.route('/battles/search/<keywordslist>')
 def search(keywordslist):
 	keywords = keywordslist.split(" ")
@@ -242,4 +265,4 @@ def get_random_items(category):
 	two = one
 	while two == one:
 		two = random.randint(0, length-1)
-	return [items[one].title, items[two].title]
+	return [items[one], items[two]]

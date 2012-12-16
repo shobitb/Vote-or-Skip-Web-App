@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<legend>
+        <h1>
+            Images
+        </h1>
+        <h3>
+        	{{ title }}
+        </h3>
+        <h4>
+        	{{ owner }}
+        </h4>
+    </legend>
+    <div id="image-saved-success" class="alert alert-success hide">
+    	The image was saved!
+    </div>
+    {{ headers }}
+    <img src="{{ url_image }}" />
+    <form method="post" action="{{ upload_url }}" id="image-chooser" class="form-horizontal"enctype="multipart/form-data">
+    	<div class="control-group">
+    		<label class="control-label" for="items">Choose an item to add image:</label>
+    		<div class="controls">
+    			<select class="dropdown" name="items" data-toggle="dropdown">
+			    	{% for i in items %}
+						<option name="item" value="{{ i.title }}">{{ i.title }}</option>
+			    	{% endfor %}
+		    	</select>
+    		</div>
+    	</div>
+    	<div class="control-group">
+    		<label class="control-label" for="image-here">Choose image:</label>
+    		<div class="controls">
+    			<input type="file" id="image-here" name="image" />
+    		</div>
+    	</div>
+    	<div class="control-group">
+    		<div class="controls">
+    			<input type="submit" type="submit" class="btn btn-primary" value="Save Image For Item"></button>
+    		</div>
+    	</div>
+	</form>
+
+	<script>
+	</script>
+
+{% endblock %}

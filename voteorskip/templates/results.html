@@ -3,10 +3,12 @@
 {% block content %}
 
 	<legend>
-		<div class="alert">
-			<button type="button" class="close" data-dismiss="alert">&times;</button>
-			<strong>Note:</strong> This category has expired. Voting is no longer possible
-		</div>
+		{% if expired %}
+			<div class="alert">
+				<button type="button" class="close" data-dismiss="alert">&times;</button>
+				<strong>Note:</strong> This category has expired. Voting is no longer possible
+			</div>
+		{% endif %}
 		<h1> Results </h1>
 		<h3> {{ title }} </h3>
 		<h4> {{ owner }} </h4>

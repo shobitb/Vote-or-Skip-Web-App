@@ -9,14 +9,30 @@
 
 <form action="/categories/{{ key }}" method="POST">
 	{% set count = 1 %}
-
-	{% for i in items %}
-		<p>
-			<input type="radio" name="item" value="{{ i }}"> {{ i }} </input>
-			<input type="hidden" name="{{ count }}" value="{{ i }}"></input>
-		</p>
-			{% set count = count + 1 %}
-	{% endfor %}
+	<ul class="media-list">
+		{% for i in items %}
+			<li class="media">
+				{% if i.image_url == 'None' %}
+				    <a class="pull-left" href="#">
+				      <img class="media-object" data-src="holder.js/220x120/text:{{ i.title }}"/>
+				    </a>
+				{% else %}
+				 	<a class="pull-left" href="{{ i.image_url }}">
+				      <img width="220" height="120" src="{{ i.image_url }}"/>
+				    </a>
+				{% endif %}
+			    <div class="media-body">
+					<h4 class="media-heading">
+						<input type="radio" name="item" value="{{ i.title }}"> {{ i.title }} </input>
+						<input type="hidden" name="{{ count }}" value="{{ i.title }}"></input>
+					</h4>
+					<div class="muted"> {{ i.wins }} won </div>
+					<div class="muted"> {{ i.losses }} lost </div>
+			    </div>
+		  </li>
+		{% set count = count + 1 %}
+		{% endfor %}
+	</ul>
 	<input type="submit" class="btn btn-primary" name="vote" value="Vote!"></input>
 	<input type="submit" name="skip" class="btn" value="Skip"></input>
 </form>
@@ -28,6 +44,6 @@
 {% endif %}
 <a href="/results/{{ key }}"><small>See Results</small></a> &#183;
 <a href="/export/{{ key }}"><small>Export XML</small></a> &#183;
-<a href="/comment/{{ key }}"><small>Comment</small></a>
+<a href="/comment/{{ key }}"><small>Comment on Items</small></a>
 
 {% endblock %}

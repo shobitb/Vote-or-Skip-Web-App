@@ -10,6 +10,8 @@ class Item(db.Model):
 	title = db.StringProperty(required = True)
 	wins = db.IntegerProperty(default = 0)
 	losses = db.IntegerProperty(default = 0)
+	blob_key = db.StringProperty(default="None")
+	image_url = db.StringProperty(default="None")
 
 class UserVote(db.Model):
 	wins = db.IntegerProperty(default=0)

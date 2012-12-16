@@ -81,26 +81,33 @@
             </form>
         </div>
         <div class="span4">
-            <h4> Expiration Date </h4>
-            <div id="expiration">
-                <div id="expiration-date">
-                    {% if expiration %}
-                        <p><strong> {{ expiration }} </strong></p>
-                        Change:
-                    {% endif %}
+            <div class="row">
+                <h4> Expiration Date </h4>
+                <div id="expiration">
+                    <div id="expiration-date">
+                        {% if expiration %}
+                            <p><strong> {{ expiration }} </strong></p>
+                            Change:
+                        {% endif %}
+                    </div>
+                    <form action="">
+                        <div class="controls-group">
+                            <div class="controls">
+                                <input type="text" id="datepicker" />
+                            </div>
+                        </div>
+                        <div class="controls-group">
+                            <div class="controls">
+                                <button class="btn" id="datepicker-button">Set Date</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <form action="">
-                    <div class="controls-group">
-                        <div class="controls">
-                            <input type="text" id="datepicker" />
-                        </div>
-                    </div>
-                    <div class="controls-group">
-                        <div class="controls">
-                            <button class="btn" id="datepicker-button">Set Date</button>
-                        </div>
-                    </div>
-                </form>
+            </div>
+            <hr>
+            <div class="row">
+                <h4> Images </h4>
+                Click <a href="/edit/images/{{ key }}">here</a> to add images to your items!
             </div>
         </div>
     </div>

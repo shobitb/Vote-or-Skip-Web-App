@@ -13,15 +13,13 @@
 		<h3> {{ title }} </h3>
 		<h4> {{ owner }} </h4>
 	</legend>
-	<ul class="nav nav-tabs">
-		<li class="active"><a href="#all-results" data-toggle="tab">All Results</a></li>
-		<li><a href="#all-comments" data-toggle="tab">All Comments</a></li>		
-		<li><a href="#my-results" data-toggle="tab">My Votes</a></li>
-		<li><a href="#my-comments" data-toggle="tab">My Comments</a></li>
-	</ul>
 
-	<div class="tab-content">
 		<div class="tab-pane active" id="all-results">
+			<legend>
+				<h3>
+					All Results
+				</h3>
+			</legend>
 			<table class="table table-striped">
 				<tr>
 					<th> Item </th>
@@ -38,6 +36,11 @@
 			</table>
 		</div>
 		<div class="tab-pane" id="all-comments">
+			<legend>
+				<h3>
+					All Comments
+				</h3>
+			</legend>
 			{% for uc in user_comments %}
 			<legend>
 				{{ uc }}
@@ -51,6 +54,9 @@
 			{% endfor %}
 		</div>
 		<div class="tab-pane" id="my-results">
+			<legend>
+				<h3> My Results </h3>
+			</legend>
 			<table class="table table-striped">
 				<tr>
 					<th> Item </th>
@@ -67,6 +73,9 @@
 			</table>
 		</div>
 		<div class="tab-pane" id="my-comments">
+			<legend>
+				<h3> My Comments </h3>
+			</legend>
 			{% for c in my_comments %}
 				<legend>
 					{{ c }}
@@ -77,6 +86,6 @@
 				</blockquote>
 			{% endfor %}
 		</div>
-	</div>
+	<a href="/export/{{ key }}"><small>Export XML</small></a>
 
 {% endblock %}

@@ -31,9 +31,10 @@ def create_category():
 @login_required
 def save_new_category():
 	category = request.form.get('category')
-	existing = Category.all().filter('title =',category).filter('owner =',users.get_current_user()).get()
-	if existing:
-		return Response(status=400)
+	existing = Category.all().filter('owner =',users.get_current_user())
+	for e in existing:
+		if e.title.lower() == category.lower():
+			return Response(status=400)
 	else:
 		items = request.form.get('items').split(',')
 		cat = Category(title=category, owner=users.get_current_user())
@@ -49,10 +50,12 @@ def save_new_category():
 def save_edited_category():
 	cat_name = request.form.get('category')
 	key = request.form.get('key')
-	existing = Category.all().filter('title =', cat_name).filter('owner =',users.get_current_user()).get()
-	if not str(existing.key()) == key:
-		error = "You already have a category with that name. Please choose a different name"
-		return Response(status=400)
+	existing = Category.all().filter('owner =',users.get_current_user())
+	for e in existing:
+		if e.title.lower() == cat_name.lower():
+			if not str(e.key()) == key:
+				error = "You already have a category with that name. Please choose a different name"
+				return Response(status=400)
 	category = Category.get(key)
 	items_from_form = request.form.get('items').split(',')
 	old_items_from_db = Item.all().ancestor(category)
@@ -72,7 +75,6 @@ def save_edited_category():
 
 @app.route('/edit')
 @login_required
-@login_required
 def edit():
 	categories = Category.all().filter('owner = ',users.get_current_user())
 	return render_template('edit.html',categories=categories)
@@ -91,6 +93,7 @@ def edit_category(key):
 	return render_template('edit_category.html', items=items, count=items.count(), key=key, title=category.title, owner=category.owner.email(), expiration=expiration)
 
 @app.route('/set_expiration_date/<key>',methods=['POST'])
+@login_required
 def set_expiration(key):
 	category = Category.get(key)
 	date = request.form.get('date')
@@ -104,7 +107,7 @@ def show_category(key):
 	category = Category.get(key)
 
 	if category.expiration and datetime.now() > category.expiration:
-		return results(key)
+		return results(key,"This category has expired. Voting is no longer possible.")
 
 	if not request.form.has_key('item') or request.form.has_key('skip'):
 		random_items = get_random_items(category)
@@ -142,14 +145,11 @@ def show_category(key):
 
 @app.route('/results/<key>')
 @login_required
-def results(key):
+def results(key,expired=None):
 	my_votes = {}
 	my_comments = {}
 	user_comments = {}
-	expired = ""
 	category = Category.get(key)
-	if category.expiration and datetime.now() > category.expiration:
-		expired = "This category has expired. Voting is no longer possible."
 	items = Item.all().ancestor(category).order('-wins').order('losses')
 	count = 0
 	for i in items:
@@ -218,6 +218,7 @@ def post_comment():
 		return Response(status=200)
 
 @app.route('/edit/images/<key>')
+@login_required
 def edit_image(key):
 	category = Category.get(key)
 	upload_url = blobstore.create_upload_url('/saveimage/'+key)
@@ -225,6 +226,7 @@ def edit_image(key):
 	return render_template('edit_images.html',items=items,key=key,title=category.title,owner=category.owner.email(),upload_url=upload_url)
 
 @app.route('/saveimage/<key>',methods=['POST'])
+@login_required
 def saveimage(key):
 	category = Category.get(key)
 	items = Item.all().ancestor(category)
@@ -239,6 +241,7 @@ def saveimage(key):
 	return redirect('edit/images/'+key)
 
 @app.route('/battles/search/<keywordslist>')
+@login_required
 def search(keywordslist):
 	keywords = keywordslist.split(" ")
 	categories = {}
@@ -256,10 +259,7 @@ def search(keywordslist):
 				keys[item.parent().title] = item.parent().key()
 	return render_template('search_results.html',categories=categories, keys=keys, keywords=keywordslist)
 
-@app.route('/logout')
-def logout():
-	return redirect(users.create_logout_url('/'))
-
+""" Helper methods """
 def get_item(category,title):
 	items = Item.all().filter('title =',title).ancestor(category)
 	return items.get()

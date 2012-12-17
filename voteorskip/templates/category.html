@@ -7,7 +7,7 @@
 	<h4> {{ owner }} </h4>
 </legend>
 
-<form action="/categories/{{ key }}" method="POST">
+<form action="/categories/{{ key }}" id="vote-or-skip-form" method="POST">
 	{% set count = 1 %}
 	<ul class="media-list">
 		{% for i in items %}
@@ -23,7 +23,7 @@
 				{% endif %}
 			    <div class="media-body">
 					<h4 class="media-heading">
-						<input type="radio" name="item" value="{{ i.title }}"> {{ i.title }} </input>
+						<input type="radio" name="item" id= "{{ count }}" value="{{ i.title }}"> {{ i.title }} </input>
 						<input type="hidden" name="{{ count }}" value="{{ i.title }}"></input>
 					</h4>
 					<div class="muted"> {{ i.wins }} won </div>
@@ -33,7 +33,7 @@
 		{% set count = count + 1 %}
 		{% endfor %}
 	</ul>
-	<input type="submit" class="btn btn-primary" name="vote" value="Vote!"></input>
+	<input type="submit" class="btn btn-primary" name="vote" id="vote-button" value="Vote!"></input>
 	<input type="submit" name="skip" class="btn" value="Skip"></input>
 </form>
 
@@ -45,5 +45,14 @@
 <a href="/results/{{ key }}"><small>See Results</small></a> &#183;
 <a href="/export/{{ key }}"><small>Export XML</small></a> &#183;
 <a href="/comment/{{ key }}"><small>Comment on Items</small></a>
+<script>
+
+	$("#vote-button").click(function() {
+		if ($("#1").is(':checked') == false && $("#2").is(':checked') == false) {
+			alert("Please select an item");
+			return false;
+		}
+	})
+</script>
 
 {% endblock %}

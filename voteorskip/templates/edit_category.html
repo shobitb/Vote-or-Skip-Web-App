@@ -185,6 +185,10 @@
 
             $("#datepicker-button").click(function(event) {
                 date = $("#datepicker").val()
+                if (date == "") {
+                    alert("Date cannot be none");
+                    return false;
+                }
                 console.log(date)
                 $.ajax({
                     url: "/set_expiration_date/{{ key }}",
